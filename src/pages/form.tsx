@@ -7,8 +7,12 @@ export default function FormPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
 
+  const validateMutation = api.validate.validateUpload.useMutation();
+
   const uploadMutation = api.upload.uploadFormDataAndCV.useMutation({
     onSuccess: (data) => {
+      // Fire validation in background, then redirect immediately
+      validateMutation.mutate({ id: data.id });
       router.push(`/result/${data.id}`);
     },
   });
