@@ -1,0 +1,100 @@
+{
+  "name": "CV Comparison",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cv-comparison",
+        "responseMode": "lastNode",
+        "options": {
+          "responseContentType": "application/json"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "10185751-f290-4365-88ac-baf4a5b63901",
+      "name": "Webhook",
+      "webhookId": "64dfebd7-9a41-44ad-9839-2b1a11b757cd"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\":[\n      {\"text\": \"You are an assistant that validates job application data. Compare the following structured form data against the text of a CV. Current date is {{ new Date() }}. Experience leniency is 6-8 months. Return a JSON object with:\\n- \\\"status\\\": \\\"SUCCESS\\\" if all match, otherwise \\\"FAILURE\\\".\\n- \\\"mismatches\\\": an object where each key is a field and the value is an explanation.\\n\\nForm Data:\\nFull Name: {{ $json.body.fullName }}\\nEmail: {{ $json.body.email }}\\nPhone: {{ $json.body.phone }}\\nSkills: {{ $json.body.skills }}\\nExperience: {{ $json.body.experience }}\\nCV File is attached\"},\n      {\n        \"inline_data\": {\n          \"mime_type\": \"application/pdf\",\n          \"data\": \"{{ $json.body.file }}\"\n        }\n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        0
+      ],
+      "id": "eecf9f14-d4c8-4078-8dfa-241ba009332e",
+      "name": "Gemini - Get Text",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xhbzDov4bRI4wfGv",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  let a = item.json.candidates[0].content.parts[0].text;\n  a = a.replace(\"```json\\n\", \"\").replace(\"\\n```\", \"\");\n  item.json = (JSON.parse(a));\n}\n// $input.first().json.candidates[0].content.parts[0].text\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "0e925c02-16a6-4367-8abd-58c676c8d908",
+      "name": "Code",
+      "executeOnce": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Get Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Get Text": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b702d6e8-271f-4e7d-a299-1096ef12e7d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2006ff9918cff3d705dc7ba72a50118c6cf0aba0a533f343030eee9574dad970"
+  },
+  "id": "1PVA81uipwJbL4be",
+  "tags": []
+}
